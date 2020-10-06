@@ -16,13 +16,13 @@ type SES struct {
 	client *ses.SES
 }
 
-// SendEmailResult contains the ID assigned to this email by SES
-type SendEmailResult struct {
+// Result contains the ID assigned to this email by SES
+type Result struct {
 	SESOutput *ses.SendEmailOutput
 }
 
 // ID returns the ID of this email as assigned by SES
-func (s *SendEmailResult) ID() string {
+func (s Result) ID() string {
 	return *s.SESOutput.MessageId
 }
 
@@ -40,7 +40,7 @@ func New(config aws.Config) *SES {
 }
 
 // SendEmail sends an email using the parameters provided through SendEmailInput
-func (s *SES) SendEmail(input *mailer.SendEmailInput) (*mailer.SendEmailResult, error) {
+func (s *SES) SendEmail(input *mailer.SendEmailInput) (mailer.SendEmailResult, error) {
 	to := input.Destination.ToAddresses
 
 	var rec []*string
@@ -80,12 +80,5 @@ func (s *SES) SendEmail(input *mailer.SendEmailInput) (*mailer.SendEmailResult, 
 		return nil, err
 	}
 
-	ser := SendEmailResult{SESOutput: result}
-	if err != nil {
-		log.WithFields(log.Fields{
-			"ID": ser.ID(),
-		}).Info("sent ses email and received ID")
-		return nil, err
-	}
-	return &ser, nil
+	return Result{SESOutput: result}, nil
 }
