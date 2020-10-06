@@ -40,7 +40,7 @@ func New(config aws.Config) *SES {
 }
 
 // SendEmail sends an email using the parameters provided through SendEmailInput
-func (s *SES) SendEmail(input *mailer.SendEmailInput) (*SendEmailResult, error) {
+func (s *SES) SendEmail(input *mailer.SendEmailInput) (*mailer.SendEmailResult, error) {
 	to := input.Destination.ToAddresses
 
 	var rec []*string
