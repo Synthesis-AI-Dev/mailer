@@ -34,5 +34,5 @@ type SendEmailResult interface {
 
 // Mailer describes a common interface for sending emails
 type Mailer interface {
-	SendEmail(input *SendEmailInput) (*SendEmailResult, error)
+	SendEmail(input *SendEmailInput) (SendEmailResult, error)
 }
