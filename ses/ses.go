@@ -1,10 +1,15 @@
 package ses
 
 import (
-
 	//go get -u github.com/aws/aws-sdk-go
+
+	"time"
+
 	"github.com/Synthesis-AI-Dev/mailer"
+	"github.com/Synthesis-AI-Dev/mailer/lib/generic"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
 	log "github.com/sirupsen/logrus"
@@ -70,15 +75,22 @@ func (s *SES) SendEmail(input *mailer.SendEmailInput) (mailer.SendEmailResult, e
 		Source: aws.String(input.Sender),
 	}
 
-	result, err := s.client.SendEmail(i)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"to":   rec,
-			"from": input.Sender,
-			"err":  err,
-		}).Info("error sending email via SES")
-		return nil, err
-	}
+	var result *ses.SendEmailOutput
+	generic.Retry(3, 3*time.Second, func() error {
+		var err error
+
+		result, err = s.client.SendEmail(i)
+		// if the error was returned by AWS then it'll almost certainly
+		// send the same error again if we retry, so send a stop error
+		if _, ok := err.(awserr.Error); ok {
+			log.WithFields(log.Fields{
+				"send_email_input": i,
+			}).Error("send email fail")
+			return generic.NewStopErr(err)
+		}
+
+		return nil
+	})
 
 	return Result{SESOutput: result}, nil
 }
